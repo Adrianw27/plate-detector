@@ -6,7 +6,7 @@ from PIL import Image
 from charset import stoi, itos, vocab_size
 
 W, H = 160, 48
-BLANK = vocab_size()
+BLANK = vocab_size()  # CTC blank id
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 class LPDataset(Dataset):
@@ -28,15 +28,15 @@ class LPDataset(Dataset):
         p, t = self.items[i]
         img = self.tx(Image.open(p).convert("L"))
         tgt = torch.tensor([stoi[c] for c in t], dtype=torch.long)
-        return img, tgt
+        return img, tgt, t
 
 def collate(batch):
-    imgs, tgts = zip(*batch)
+    imgs, tgts, raws = zip(*batch)
     imgs = torch.stack(imgs, 0)
     tgt_lens = torch.tensor([t.size(0) for t in tgts], dtype=torch.long)
     tgts = torch.cat(tgts, 0)
     in_lens = torch.full((imgs.size(0),), W // 4, dtype=torch.long)
-    return imgs, tgts, in_lens, tgt_lens
+    return imgs, tgts, in_lens, tgt_lens, raws
 
 class CRNN(nn.Module):
     def __init__(self, K):
@@ -58,23 +58,54 @@ class CRNN(nn.Module):
         y = self.fc(y)          # [B,T,C]
         return y.permute(1,0,2) # [T,B,C] for CTC
 
+def greedy_decode(logits):  # [T,B,C]
+    out = logits.argmax(-1)
+    T, B = out.shape
+    res = []
+    for b in range(B):
+        prev = BLANK
+        s = []
+        for t in range(T):
+            k = out[t, b].item()
+            if k != BLANK and k != prev:
+                s.append(itos[k])
+            prev = k
+        res.append("".join(s))
+    return res
+
 def main():
     train_ds = LPDataset("data/train")
-    train_dl = DataLoader(train_ds, batch_size=64, shuffle=True, collate_fn=collate)
+    val_ds   = LPDataset("data/val")
+    train_dl = DataLoader(train_ds, batch_size=64, shuffle=True,  collate_fn=collate)
+    val_dl   = DataLoader(val_ds,   batch_size=64, shuffle=False, collate_fn=collate)
 
     m = CRNN(vocab_size()).to(DEVICE)
     opt = torch.optim.Adam(m.parameters(), lr=1e-3)
     crit = nn.CTCLoss(blank=BLANK, zero_infinity=True)
 
     for ep in range(3):
-        for imgs, tgts, in_lens, tgt_lens in train_dl:
+        for imgs, tgts, in_lens, tgt_lens, _ in train_dl:
             imgs, tgts, in_lens, tgt_lens = imgs.to(DEVICE), tgts.to(DEVICE), in_lens.to(DEVICE), tgt_lens.to(DEVICE)
             logp = F.log_softmax(m(imgs), dim=-1)
             loss = crit(logp, tgts, in_lens, tgt_lens)
             opt.zero_grad()
             loss.backward()
             opt.step()
-        print("epoch", ep+1, "loss", float(loss))
+
+        # simple val (exact match)
+        m.eval()
+        total, correct = 0, 0
+        with torch.no_grad():
+            for imgs, tgts, in_lens, tgt_lens, raw in val_dl:
+                imgs = imgs.to(DEVICE)
+                logits = m(imgs)
+                preds = greedy_decode(logits)
+                for p, g in zip(preds, raw):
+                    correct += int(p == g)
+                    total += 1
+        m.train()
+        acc = correct / max(1, total)
+        print(f"epoch {ep+1}: loss={float(loss):.4f} val_acc={acc*100:.2f}%")
 
     Path("ckpts").mkdir(exist_ok=True)
     torch.save({"model": m.state_dict()}, "ckpts/crnn.pt")
