@@ -25,3 +25,17 @@ python ./py/train.py
 python ./py/infer.py --img data/val/000010.png --ckpt ckpts/crnn.pt
 ```
 7. View prediction
+
+## Dataset source:
+@article{RamajoBallester2024,
+    title = {Dual license plate recognition and visual features encoding for vehicle identification},
+    journal = {Robotics and Autonomous Systems},
+    volume = {172},
+    pages = {104608},
+    year = {2024},
+    issn = {0921-8890},
+    doi = {https://doi.org/10.1016/j.robot.2023.104608},
+    url = {https://www.sciencedirect.com/science/article/pii/S0921889023002476},
+    author = {Álvaro Ramajo-Ballester and José María {Armingol Moreno} and Arturo {de la Escalera Hueso}},
+    keywords = {Deep learning, Public dataset, ALPR, License plate recognition, Vehicle re-identification, Object detection},
+}
