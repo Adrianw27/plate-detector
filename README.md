@@ -12,16 +12,16 @@ source .venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
 ```
-4. Generate sythetic data
+4. Prep data (you can use any dataset here)
 ```
-python ./py/gen_data.py
+python ./py/prep_data.py --src sample-data --csv data-labels.csv
 ```
 5. Train the model
 ```
 python ./py/train.py
 ```
-6. Test the model (choose any image in /data/val)
+6. Test the model (choose any image in sample-data/)
 ```
-python ./py/infer.py --img data/val/000010.png --ckpt ckpts/crnn.pt
+python ./py/infer.py --img sample-data/1000.jpg --ckpt ckpts/crnn.pt
 ```
 7. View prediction
