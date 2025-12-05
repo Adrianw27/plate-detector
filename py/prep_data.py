@@ -42,7 +42,6 @@ def write_split(out_dir: Path, pairs):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--src", required=True, help="folder with CROPPED real plate images")
-    ap.add_argument("--csv", help="optional CSV file: filename,label")
     ap.add_argument("--val_ratio", type=float, default=0.2)
     ap.add_argument("--seed", type=int, default=1337)
     args = ap.parse_args()
@@ -51,11 +50,8 @@ def main():
     if not src.exists():
         print(f"ERROR: source folder '{src}' not found")
         return
-
-    if args.csv:
-        pairs = load_pairs_from_csv(src, Path(args.csv))
-    else:
-        pairs = load_pairs_from_names(src)
+    
+    load_pairs_from_names(src)
 
     pairs = [(p, l) for (p, l) in pairs if l]
     if not pairs:
