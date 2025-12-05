@@ -20,8 +20,8 @@ python ./py/prep_data.py --src data
 ```
 python ./py/train.py
 ```
-6. Test the model (choose any image in sample-data/)
+6. Test the model (choose any image in data/val/)
 ```
-python ./py/infer.py --img sample-data/1000.jpg --ckpt ckpts/crnn.pt
+python ./py/infer.py --img data/val/000013.png --ckpt ckpts/crnn.pt
 ```
 7. View prediction
