@@ -14,7 +14,7 @@ pip install -r requirements.txt
 ```
 4. Prep data (you can use any dataset here)
 ```
-python ./py/prep_data.py --src sample-data --csv data-labels.csv
+python ./py/prep_data.py --src data
 ```
 5. Train the model
 ```
