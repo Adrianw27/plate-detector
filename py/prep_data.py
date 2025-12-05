@@ -1,8 +1,8 @@
 
 # Usage:
 #   python prep_data.py --src real_raw
-#   python prep_data.py --src real_raw --csv labels.csv    (csv for data labels)
-import argparse, csv, random, re, shutil
+
+import argparse, random, re, shutil
 from pathlib import Path
 from PIL import Image
 
@@ -29,20 +29,6 @@ def load_pairs_from_names(src: Path):
         lab = label_from_name(p.stem)
         if lab:
             pairs.append((p, lab))
-    return pairs
-
-def load_pairs_from_csv(src: Path, csv_path: Path):
-    pairs = []
-    with open(csv_path, "r", newline="", encoding="utf-8") as f:
-        r = csv.reader(f)
-        header = next(r, None)
-        for row in r:
-            if not row or len(row) < 2: 
-                continue
-            fn, lab = row[0].strip(), row[1].strip().upper()
-            p = src / fn
-            if p.exists() and p.suffix.lower() in EXTS and try_open(p):
-                pairs.append((p, lab))
     return pairs
 
 def write_split(out_dir: Path, pairs):
