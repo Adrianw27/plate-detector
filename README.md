@@ -1,4 +1,4 @@
-Plate Detector (work in progress)
+# Plate Detector (under development)
 Trains a Convolutional Recurrant Neural Network model with Connectionist Temporal Classification loss for Optical Character Recognition tasks, converting license plate photos to text. Developed in Python primarily with PyTorch.
 
 ## How to run:
